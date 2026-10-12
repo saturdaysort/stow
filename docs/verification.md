@@ -71,6 +71,19 @@ Evidence is the `screencapture -R` menu bar images in `build/verification/`. Tha
 - **Design decision for Nate:** a darker light-bar amber, around #8A4700, would clear 3:1 even on mid-light bars.
 - **The wallpaper decides** whether the macOS 27 menu bar is light or dark. Switching Appearance to Light alone did not change it.
 
+## Notarized release build
+
+Checked 2026-10-12 with `build/release/Stow-0.1.0.zip` (build 24), unzipped and installed the way a recipient would.
+
+- **Signature:** Developer ID Application, with the hardened runtime that notarization requires. Gatekeeper accepts the installed app as "Notarized Developer ID", and its stapled ticket validates.
+- **Hiding still works under the hardened runtime:**
+  - **Launched:** on both displays, exactly the six chosen apps hid. Stow's own drawer stayed visible, so macOS still matches Stow by its bundle ID under the new signature.
+  - **After a clean quit:** all six came back.
+  - **Relaunched:** both menu bars were pixel-identical to the first launch.
+  - **Against the dev build:** on the Studio Display, the hidden menu bar was pixel-identical to the dev build's after the restart (check 5).
+
+Evidence: `rel-hidden/`, `rel-quit/` and `rel-hidden2/`.
+
 ## Open questions (spec section 9)
 
 1. **Force-quit releases the assertion:** **yes** (check 3). MenuBarAgent drops it when the process dies.

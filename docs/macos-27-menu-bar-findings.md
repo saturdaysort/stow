@@ -86,6 +86,7 @@ Measured 2026-10-12 with Stow builds 16–19 on both displays. Per-check results
 - **Colored status icons render lighter and less saturated than drawn.** Stow's `#FFB340` renders as `#F7C169`, and `#A35400` as `#AA6B27`. Over real, translucent bars, contrast measured 3.80:1 on a dark bar (`#626060`) and 2.73:1 on a light-blue one (`#97D5FA`), where the design math against reference bars gave 9.35 and 4.52. Measure rendered pixels against the real bar.
 - **`CGWindowList` still shows open pop-up menus** at the pop-up menu window level. Reading levels and bounds needs no Screen Recording, so auto re-hide can wait while a menu is open.
 - **The Menu Bar settings link works:** `x-apple.systempreferences:com.apple.ControlCenter-Settings.extension` opens System Settings › Menu Bar.
+- **Exam mode works under the hardened runtime.** A Developer ID–signed, notarized build with the hardened runtime and no entitlements still loads `MenuBarClientCore` and hides icons. macOS still matches it by bundle ID.
 - **Carbon can't see other apps' hot keys.** `RegisterEventHotKey` only reports a clash within the same process, so Stow can't warn that another app already uses a shortcut.
 
 ## Other traps
