@@ -38,6 +38,7 @@ public final class HideController {
     private var token: (any RestrictionToken)?
     private var wantsHidden = false
     private var generation = 0
+    private var activeAllowList: [String] = []
     private var launchTask: (any ScheduledTask)?
     private var rehideTask: (any ScheduledTask)?
 
@@ -128,17 +129,23 @@ public final class HideController {
     private func activate() {
         let hidden = preferences.hiddenBundleIDs
         guard !hidden.isEmpty else {
-            // Never pay exam mode's side effects for nothing.
-            wantsHidden = false
-            state = .shown
+            // Never pay exam mode's side effects for nothing, and release anything still held
+            // (the list may have been emptied outside Stow while Hidden).
+            show(userInitiated: false)
             return
         }
         guard isInstalledCorrectly() else { return fail(.notInApplications) }
         guard restriction.isAvailable else { return fail(.frameworkMissing) }
 
+        let allowed = AllowList.compute(running: runningBundleIDs(), hidden: hidden, own: ownBundleID)
+        if token != nil, allowed == activeAllowList {
+            // Already restricted to exactly this list: just update the count (no swap, no flicker).
+            state = .hidden(count: hidden.count)
+            return
+        }
+
         generation += 1
         let request = generation
-        let allowed = AllowList.compute(running: runningBundleIDs(), hidden: hidden, own: ownBundleID)
         restriction.activate(allowing: allowed, systemItems: AllowList.systemItems) { [weak self] result in
             guard let self, request == self.generation, self.wantsHidden else {
                 // Superseded by a later click, swap or quit: never let a late assertion stick.
@@ -149,6 +156,7 @@ public final class HideController {
             case .success(let newToken):
                 let previous = self.token
                 self.token = newToken
+                self.activeAllowList = allowed
                 previous?.invalidate()   // the new list is live before the old one goes (spec 4.4)
                 self.state = .hidden(count: hidden.count)
             case .failure(let error):

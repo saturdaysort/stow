@@ -19,7 +19,7 @@ public final class AppController {
     private let inventory = MenuBarAppInventory()
     private var statusItem: StatusItemController?
     private var settingsWindow: SettingsWindowController?
-    private var launchObserver: (any NSObjectProtocol)?
+    private var launchWatcher: AppLaunchWatcher?
     private var terminationSignal: (any DispatchSourceSignal)?
 
     public init() {
@@ -85,10 +85,15 @@ public final class AppController {
 
     private func observeAppLaunches() {
         let hideController = hideController
-        launchObserver = NSWorkspace.shared.notificationCenter.addObserver(
-            forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main) { _ in
-            MainActor.assumeIsolated { hideController.appLaunched() }
+        let settingsWindow = settingsWindow
+        // KVO, not didLaunchApplicationNotification: on macOS 27.2 that notification isn't posted
+        // for agent or accessory apps, which most menu bar apps are (see AppLaunchWatcher).
+        let watcher = AppLaunchWatcher { change in
+            if change == .launched { hideController.appLaunched() }
+            settingsWindow?.refreshIfVisible()
         }
+        watcher.start()
+        launchWatcher = watcher
     }
 
     /// `pkill` and scripts/install.sh send SIGTERM, which would otherwise end the process

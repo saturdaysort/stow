@@ -35,6 +35,7 @@ import Testing
         let h = Harness(); defer { h.tearDown() }
         h.controller.start()
         h.restriction.refuse = true
+        h.running.append("com.example.new")   // a real change, so a swap is attempted
         h.controller.appLaunched()
         h.scheduler.advance(by: 0.5)
         #expect(h.restriction.liveTokens.map(\.id) == [1])
@@ -89,5 +90,38 @@ import Testing
         h.scheduler.advance(by: 0.5)
         #expect(h.restriction.activations.count == 1)
         #expect(h.restriction.liveTokens.isEmpty)
+    }
+
+    // Review finding 2: a list emptied outside Stow (defaults write) must release the assertion
+    // on the next refresh, never leave it alive while the state says Shown.
+    @Test func externallyEmptiedListThenRefreshReleasesTheAssertion() {
+        let h = Harness(); defer { h.tearDown() }
+        h.controller.start()
+        h.preferences.hiddenBundleIDs = []
+        h.running.append("com.example.new")
+        h.controller.appLaunched()
+        h.scheduler.advance(by: 0.5)
+        #expect(h.controller.state == .shown)
+        #expect(h.restriction.liveTokens.isEmpty)
+    }
+
+    // Review finding 1: launch signals fire for every helper process; an unchanged
+    // allow-list must not swap assertions (each swap is a flicker risk).
+    @Test func refreshWithUnchangedAllowListDoesNotSwap() {
+        let h = Harness(); defer { h.tearDown() }
+        h.controller.start()
+        h.controller.appLaunched()
+        h.scheduler.advance(by: 0.5)
+        #expect(h.restriction.activations.count == 1)
+        #expect(h.restriction.liveTokens.map(\.id) == [1])
+    }
+
+    @Test func hidingAnAppThatIsNotRunningUpdatesTheCountWithoutSwapping() {
+        let h = Harness(); defer { h.tearDown() }
+        h.controller.start()
+        h.preferences.setHidden("com.not.running", true)
+        h.controller.hideListChanged()
+        #expect(h.restriction.activations.count == 1)
+        #expect(h.controller.state == .hidden(count: 2))
     }
 }

@@ -77,6 +77,14 @@ import Testing
         #expect(prefs.shortcut == .defaultShortcut)
     }
 
+    // Review finding 3: a stored modifier mask too large for UInt32 used to trap (crash loop at login).
+    @Test func oversizedModifierMaskFallsBackInsteadOfCrashing() {
+        let (defaults, cleanup) = TestDefaults.make(); defer { cleanup() }
+        defaults.set(4, forKey: "shortcutKeyCode")
+        defaults.set(Int.max, forKey: "shortcutModifiers")
+        #expect(Preferences(defaults: defaults).shortcut == .defaultShortcut)
+    }
+
     @Test func delayTitles() {
         #expect(RehideDelay.allCases.map(\.title) == ["Never", "5 seconds", "10 seconds", "30 seconds", "1 minute"])
         #expect(RehideDelay.never.seconds == nil)

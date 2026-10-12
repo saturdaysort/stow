@@ -85,7 +85,8 @@ public final class Preferences {
             guard let code = defaults.object(forKey: Key.shortcutKeyCode) as? Int else { return .defaultShortcut }
             if code == -1 { return nil }
             guard (0...0xFFFF).contains(code),
-                  let modifiers = defaults.object(forKey: Key.shortcutModifiers) as? Int, modifiers >= 0
+                  // Carbon modifier masks fit in 16 bits; anything else is a damaged value, not a crash.
+                  let modifiers = defaults.object(forKey: Key.shortcutModifiers) as? Int, (0...0xFFFF).contains(modifiers)
             else { return .defaultShortcut }
             let shortcut = Shortcut(keyCode: UInt32(code), modifiers: UInt32(modifiers))
             return shortcut.isValid ? shortcut : .defaultShortcut
