@@ -85,4 +85,10 @@ import Testing
         await s.model.refresh()
         #expect(!s.model.isInstalledCorrectly)
     }
+
+    // Task 16 check 4: on device the microphone/camera indicator hides while icons are hidden,
+    // so the footnote has to say so (privacy signal).
+    @Test func aboutHidingNamesTheMicrophoneAndCameraIndicators() {
+        #expect(SettingsCopy.aboutHiding.contains("the microphone and camera indicators"))
+    }
 }

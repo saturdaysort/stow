@@ -3,7 +3,7 @@ import Observation
 
 /// Settings copy whose wording depends on what on-device testing finds (spec 5.3, check 4).
 public enum SettingsCopy {
-    public static let aboutHiding = "Stow hides apps using macOS's exam mode. While icons are hidden, clicking the clock won't open Notification Center, and Focus and Now Playing may be hidden too."
+    public static let aboutHiding = "Stow hides apps using macOS's exam mode. While icons are hidden, clicking the clock won't open Notification Center, and Focus, Now Playing and the microphone and camera indicators may be hidden too."
 }
 
 /// Everything the Settings window shows and does (spec 5.3 to 5.5).
