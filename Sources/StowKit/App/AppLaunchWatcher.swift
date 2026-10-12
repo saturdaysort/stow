@@ -2,10 +2,12 @@ import AppKit
 
 /// Reports app launches and quits by watching `NSWorkspace.runningApplications` with KVO.
 ///
-/// On macOS 27.2, `NSWorkspace.didLaunchApplicationNotification` is not posted for agent
-/// (LSUIElement) or accessory apps, which covers most menu bar apps (Tailscale, Tiny Ipsum,
-/// Creative Cloud, Nightfall). KVO on `runningApplications` sees every launch, delivered on
-/// the main thread. Measured 2026-10-12 in the code review (finding 1).
+/// `NSWorkspace.didLaunchApplicationNotification` is not posted for background or agent
+/// (LSUIElement) apps, which covers most menu bar apps (Tailscale, Tiny Ipsum, Creative Cloud,
+/// Nightfall). Apple documents this and points to KVO on `runningApplications` instead, which
+/// sees every launch, delivered on the main thread. Stow's first build used the notification,
+/// so agents launched while icons were hidden stayed hidden (code review finding 1, on-device
+/// check 2, 2026-10-12).
 @MainActor
 public final class AppLaunchWatcher: NSObject {
     public enum Change: Equatable, Sendable {

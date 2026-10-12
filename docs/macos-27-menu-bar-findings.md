@@ -69,18 +69,32 @@ The appeal was that it uses only public APIs and needs no permissions. The test 
   - Focus and Now Playing hide whatever the list says;
   - the mic/camera in-use indicator reportedly hides;
   - it's per app only.
-- **Not yet verified on this machine:**
-  - whether a crash releases the assertion;
-  - whether the mic/camera indicator hides;
-  - whether swapping one assertion for another flickers.
+- **Verified on this machine** (see "Measured during Stow's verification" below): a crash releases the assertion, the mic/camera indicator does hide, and swapping one assertion for another doesn't flicker.
 
 The API usage was learned from dwarvesf/hidden (MIT), `HBNativeVisibilityShim.m`. Stow's bridge is a fresh implementation of the same calls.
 
+## Measured during Stow's verification
+
+Measured 2026-10-12 with Stow builds 16–19 on both displays. Per-check results are in `docs/verification.md`.
+
+- **Launch notifications skip agent apps.** AppKit doesn't post `NSWorkspace.didLaunchApplicationNotification` for agent (LSUIElement) or background apps, which covers most menu bar apps. This is documented behavior, not something new in 27. Apple's docs point to KVO on `NSWorkspace.shared.runningApplications`, which sees every launch and quit. Stow's first build relied on the notification, so an agent app launched while icons were hidden stayed hidden.
+- **A crash releases the assertion.** After `kill -9` while hidden, every icon came back within 3 seconds with no help. Quitting from the menu and SIGTERM bring them back too.
+- **Exam mode hides more than the list.** While it's active, the Focus icon and the mic/camera in-use pill (MenuBarAgent's `AudioVideoModule`) hide, and clicking the clock doesn't open Notification Center. The small orange privacy dot at the far right stays. Widening `allowedSystemItems` from `0..<64` to `0..<256` changed nothing.
+- **Swapping assertions doesn't flicker** when the new one activates before the old one is invalidated. Frames sampled about every 0.6 seconds showed only the affected icon change.
+- **Ad-hoc-signed probe apps are poor test subjects.** A throwaway app, ad-hoc signed and run from `/private/tmp`, stayed hidden even with its bundle ID on the allow-list. Which of the two caused it wasn't isolated, but the Control Center plist keys ad-hoc apps by file URL (`adhocBinary`), which fits. A signed agent app (Tiny Ipsum) behaved as expected.
+- **The wallpaper decides whether the menu bar is light or dark,** not the Appearance setting. With Appearance set to Light over a dark wallpaper, the bar stayed grey with white text. A status button's `effectiveAppearance` follows the bar, so it's the right value to pick colors from.
+- **Colored status icons render lighter and less saturated than drawn.** Stow's `#FFB340` renders as `#F7C169`, and `#A35400` as `#AA6B27`. Over real, translucent bars, contrast measured 3.80:1 on a dark bar (`#626060`) and 2.73:1 on a light-blue one (`#97D5FA`), where the design math against reference bars gave 9.35 and 4.52. Measure rendered pixels against the real bar.
+- **`CGWindowList` still shows open pop-up menus** at the pop-up menu window level. Reading levels and bounds needs no Screen Recording, so auto re-hide can wait while a menu is open.
+- **The Menu Bar settings link works:** `x-apple.systempreferences:com.apple.ControlCenter-Settings.extension` opens System Settings › Menu Bar.
+- **Carbon can't see other apps' hot keys.** `RegisterEventHotKey` only reports a clash within the same process, so Stow can't warn that another app already uses a shortcut.
+
 ## Other traps
 
-- **Ad-hoc signing changes the code identity every build**, so macOS forgets the Accessibility grant. Sign with a stable Apple Development identity.
+- **Ad-hoc signing changes the code identity every build**, so macOS forgets the Accessibility grant. Sign with a stable Apple Development identity. With one, Stow's grant survived three reinstalls.
 - **Option-clicks can't be read from `currentEvent`.** On 27, `NSApp.currentEvent.modifierFlags` is reportedly empty inside a status item's action (dwarvesf/hidden#434). Read the event type, or use `NSEvent.modifierFlags`.
-- **Screen capture works from this dev environment** with `screencapture -x -R x,y,w,h` (global coordinates with a top-left origin). It's the reliable way to check what the menu bar really shows. Stow itself never needs Screen Recording.
+- **Screen capture works from this dev environment** with `screencapture -x -R x,y,w,h` (global coordinates with a top-left origin). It's the reliable way to check what the menu bar really shows. Stow itself never needs Screen Recording. Re-read display rects after a scaling change or an unplug, or the capture lands on the wrong strip.
+- **TCC requests only show with the real `log` and extra levels.** In a non-interactive zsh, `log` is a zsh built-in, so call `/usr/bin/log show --info --debug`. WindowServer runs a `kTCCServiceListenEvent` check against many processes, Stow included. That isn't Stow asking, and nothing prompts.
+- **`open` can fail with error -600 right after the old copy quits,** while LaunchServices catches up. `scripts/install.sh` retries for up to 5 seconds.
 
 ## Sources
 
