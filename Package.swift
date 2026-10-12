@@ -19,6 +19,7 @@ let package = Package(
             ]
         ),
         .executableTarget(name: "Stow", dependencies: ["StowKit"], path: "Sources/Stow"),
+        .executableTarget(name: "MakeIcon", dependencies: ["StowKit"], path: "Sources/MakeIcon"),
         .testTarget(name: "StowKitTests", dependencies: ["StowKit", "ExamModeBridge"], path: "Tests/StowKitTests"),
     ]
 )
