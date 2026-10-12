@@ -39,6 +39,7 @@ public final class HideController {
     private var wantsHidden = false
     private var generation = 0
     private var launchTask: (any ScheduledTask)?
+    private var rehideTask: (any ScheduledTask)?
 
     public init(restriction: any MenuBarRestriction,
                 preferences: Preferences,
@@ -76,20 +77,24 @@ public final class HideController {
     }
 
     public func hide() {
+        cancelRehide()
         wantsHidden = true
         activate()
     }
 
     public func show(userInitiated: Bool = true) {
+        cancelRehide()
         wantsHidden = false
         generation += 1   // anything still in flight is now stale
         token?.invalidate()
         token = nil
         state = .shown
+        if userInitiated { scheduleRehide() }
     }
 
     /// Quit (menu, Command-Q, logout, SIGTERM): release everything before the process exits.
     public func prepareForQuit() {
+        cancelRehide()
         launchTask?.cancel()
         launchTask = nil
         wantsHidden = false
@@ -159,5 +164,27 @@ public final class HideController {
         token?.invalidate()
         token = nil
         state = .unavailable(reason)
+    }
+
+    // MARK: - Auto re-hide (spec 4.5)
+
+    private func scheduleRehide() {
+        guard let seconds = preferences.rehideDelay.seconds, !preferences.hiddenBundleIDs.isEmpty else { return }
+        rehideTask = scheduler.schedule(after: seconds) { [weak self] in self?.rehideDue() }
+    }
+
+    /// Waits while the pointer is in the menu bar or a menu is open, re-checking every second.
+    private func rehideDue() {
+        guard !wantsHidden else { return }
+        if isBusy() {
+            rehideTask = scheduler.schedule(after: 1) { [weak self] in self?.rehideDue() }
+        } else {
+            hide()
+        }
+    }
+
+    private func cancelRehide() {
+        rehideTask?.cancel()
+        rehideTask = nil
     }
 }
