@@ -16,8 +16,8 @@ Evidence is the `screencapture -R` menu bar images in `build/verification/`. Tha
 | 2 | An app launched while hidden stays visible; flicker | **Failed on build 16, pass after fix `b314a36`.** Tiny Ipsum (an agent app), launched while hidden, appeared within seconds while the others stayed hidden. No flicker: changes were one icon wide, with no frame where everything reappeared. | `2b-before-launch`, `2b-after-launch`, `check2tiny` |
 | 3 | Crash test (release gate) | **Pass.** After `kill -9` while hidden, every hidden icon returned within 3s on its own. | `3-before-crash`, `3-after-crash` |
 | 4 | Side effects while hidden | **Measured.** See "Exam-mode side effects" below; the Settings footnote and README now say so (`5f7769c`). | `1-click-sequence`, `4-wide-range-hidden` |
-| 5 | Sleep/wake, display unplug/replug, logout/login | **Sleep/wake: pass. Unplug/replug: pass. Logout/login: pending** (run last, because logging out ends the Claude session). | `5-after-wake-*`, `5-after-replug-*` |
-| 6 | Only Accessibility requested; grant survives installs | **Pass.** See "Permissions from scratch" below. | `.superpowers/sdd/.../tcc-full.log` (local) |
+| 5 | Sleep/wake, display unplug/replug, logout/login | **Pass.** Sleep/wake and unplug/replug pass. A full restart passes too, with permissions reset beforehand. See "Restart and login" below. | `5-after-wake-*`, `5-after-replug-*`, `login-before-*`, `login-after/` |
+| 6 | Only Accessibility requested; grant survives installs | **Pass.** See "Permissions from scratch" below. | `build/verification/tcc-full.log` |
 | 7 | Copy outside /Applications refuses to hide | **Pass.** `build/Stow.app` showed a dimmed drawer and hid nothing. | `7-offsite` |
 | 8 | Amber shade on dark and light bars | **Pass for shade selection; light-bar contrast below target.** See "Amber, measured" below. | `check8light3`, `check1c/068` |
 
@@ -31,6 +31,18 @@ Evidence is the `screencapture -R` menu bar images in `build/verification/`. Tha
 - **Not tested:** Now Playing, because nothing was playing. Upstream reports say it hides.
 - **A wider system-item range** (`0..<256` instead of `0..<64`) changed nothing on device, so it was reverted.
 - **Quitting brings everything back:** via the menu, via SIGTERM, and via `kill -9`.
+
+## Restart and login (check 5)
+
+- **Setup:** Nate reset Stow's permissions with `tccutil reset All studio.longbrook.stow`, then restarted the Mac. It booted at 15:34:25 and Nate logged in at 15:34:59.
+- **Result:** Stow started on its own at 15:35:18 from `/Applications`, with no permissions, and hid the chosen apps. Nate reported everything running as expected.
+- **Launch order:** MenuBarAgent's log shows menu bar apps registering at login:
+  - Tailscale at 15:35:00, Claude at :01, Control Center at :02, Voicenotes at :04 and Granola at :09;
+  - Teams and Stow at 15:35:18;
+  - Tiny Ipsum and Nightfall at 15:35:19.
+
+  So Stow's first hide overlapped other launches. That's the window where deferred minor #7 applies, and Teams, which isn't on the hide list, launched inside it.
+- **Measured end state:** at 15:38, launching Calculator, which has no menu bar icon, made Stow rebuild its allow-list. Both menu bars were pixel-identical before and after: 0 changed pixels in each of 5 frames. Nothing was wrongly hidden by then. This shows the end state, not the rebuild itself; check 2 already showed the launch watcher reacting.
 
 ## Permissions from scratch (check 6)
 
@@ -86,3 +98,22 @@ Evidence is the `screencapture -R` menu bar images in `build/verification/`. Tha
 - **Hiding is per app,** so all of an app's icons hide together.
 - **Apps macOS can't match by bundle ID always hide** while Stow hides. That includes ad-hoc-signed apps run from outside the usual locations (the throwaway probe app stayed hidden even when allowed) and tools without a bundle ID.
 - **Shortcut conflicts can't be detected.** Carbon only reports duplicates within Stow itself, and combinations like ⌘Q can be recorded. (Review finding 8, kept for v1.)
+
+## Minor issues deferred from the code review
+
+The whole-branch review graded these Minor, and they were left for later.
+
+- **#7 Launches during the first hide:** an app that launches while Stow's first hide is still in flight isn't re-allowed until the next launch. At login, the burst of launches usually covers it (check 5).
+- **#9 No logging:** a failed swap, the hot-key handler's install status and a first-run login item error go unrecorded.
+- **#10 Only Stow on the list:** a hide list holding only Stow's own ID turns exam mode on with nothing to hide.
+- **#11 Empty list at launch:** the launch checks (spec 4.6) don't run, so the menu says "Pick apps" instead of showing Unavailable.
+- **#12 Unavailable menu wording:** it shows a disabled "Show Hidden Icons", where "Hide Icons" would read better.
+- **#13 Dead keys:** `kUCKeyTranslateNoDeadKeysBit` is passed as 0 instead of the mask 1, which affects dead-key names in the shortcut display.
+- **#14 No main menu:** ⌘W and ⌘Q don't work while Settings is frontmost.
+- **#15 Bridge cleanup:**
+  - an assertion that fails to activate is released without `invalidate`;
+  - if the completion never arrives, there's no handle to release it.
+- **#16 Signing:**
+  - `install.sh` signs by identity name, which becomes ambiguous after a certificate renewal;
+  - its authority check only matches a prefix.
+- **#17 Vacuous test:** `scanWithoutAccessibility` proves nothing when the test runner itself has Accessibility.
