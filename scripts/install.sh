@@ -46,7 +46,9 @@ fi
 echo "Installing to $INSTALLED..."
 rm -rf "$INSTALLED"
 ditto "$APP" "$INSTALLED"
-open "$INSTALLED"
+# Right after the old copy quits, LaunchServices can still be tearing it down and `open`
+# fails with error -600. Retry briefly; the running-process check below has the final say.
+for _ in {1..10}; do open "$INSTALLED" 2>/dev/null && break; sleep 0.5; done
 
 # A build isn't an install: verify what's installed and what's actually running.
 codesign --verify --strict "$INSTALLED"
