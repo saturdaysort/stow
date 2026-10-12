@@ -9,10 +9,11 @@ A release is a zip of `Stow.app` that anyone on macOS 27 can download, unzip, dr
    - **Not "Apple Development".** That's for builds on your own Mac, from `scripts/install.sh`.
 2. **Store notary credentials in your keychain** under the name `stow-notary`:
    - Create an app-specific password at account.apple.com › Sign-In and Security › App-Specific Passwords.
-   - Run this in Terminal and paste the password when it asks. The password lives in your keychain, never in this repo.
+   - Run this in a terminal window, with your Apple ID in place of `you@example.com`. Paste the app-specific password when it asks. The password lives in your keychain, never in this repo.
+   - Run it in a real terminal, not through Claude's `!` prefix, because it prompts for the password and `!` output lands in the chat. Don't wrap the email in angle brackets: zsh reads `<` as a file to take input from.
 
    ```bash
-   xcrun notarytool store-credentials stow-notary --apple-id <your Apple ID email> --team-id YJM6S6FCW4
+   xcrun notarytool store-credentials stow-notary --apple-id you@example.com --team-id YJM6S6FCW4
    ```
 
 ## Cut a release
