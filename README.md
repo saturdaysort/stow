@@ -6,13 +6,21 @@ A personal macOS 27 menu bar utility that hides the menu bar icons of apps you c
 - Why it works this way: `docs/macos-27-menu-bar-findings.md`
 - On-device results: `docs/verification.md`
 
-## Install or update
+## Install a release
+
+Download `Stow-<version>.zip` from the repo's Releases. Unzip it, drag Stow to your Applications folder, and open it. Stow needs macOS 27, and it must run from Applications.
+
+## Build and install from source
 
 ```bash
 scripts/install.sh
 ```
 
 This builds Stow, signs it with your Apple Development identity, installs it to `/Applications/Stow.app` and relaunches it. Stow must run from `/Applications`, because exam mode doesn't recognize any other copy.
+
+## Release
+
+`scripts/release.sh` builds a signed, notarized zip that anyone can install. See `docs/releasing.md` for the one-time setup.
 
 ## Test
 

@@ -7,21 +7,8 @@ set -euo pipefail
 # pipefail the writer's SIGPIPE (exit 141) would abort the script.
 cd "${0:A:h}/.."
 
-APP="build/Stow.app"
 INSTALLED="/Applications/Stow.app"
-
-echo "Building release..."
-swift build -c release --product Stow
-BIN_DIR="$(swift build -c release --product Stow --show-bin-path)"
-
-echo "Assembling $APP..."
-rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BIN_DIR/Stow" "$APP/Contents/MacOS/Stow"
-BUILD_NUMBER="$(git rev-list --count HEAD 2>/dev/null || echo 1)"
-sed "s/__BUILD_NUMBER__/$BUILD_NUMBER/" Resources/Info.plist > "$APP/Contents/Info.plist"
-plutil -lint -s "$APP/Contents/Info.plist"
-cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+APP="$(scripts/build-app.sh)"
 
 # A stable identity keeps the Accessibility grant across rebuilds; ad-hoc signing resets it every time.
 IDENTITY="$(security find-identity -v -p codesigning | awk -F'"' '/Apple Development:/ && !found { print $2; found = 1 }')"
@@ -63,4 +50,5 @@ if ! pgrep -f "^$INSTALLED/Contents/MacOS/Stow" >/dev/null; then
   exit 1
 fi
 VERSION="$(defaults read "$INSTALLED/Contents/Info" CFBundleShortVersionString)"
+BUILD_NUMBER="$(defaults read "$INSTALLED/Contents/Info" CFBundleVersion)"
 echo "Installed Stow $VERSION (build $BUILD_NUMBER), signed by $AUTHORITY, running from $INSTALLED."
