@@ -28,4 +28,5 @@ A release is a zip of `Stow.app` that anyone on macOS 27 can download, unzip, dr
 - **Accessibility is granted per signature.** To macOS, a release build (Developer ID) and a dev build (Apple Development) are different apps. Switching between them means granting Accessibility again.
 - **The ticket is stapled to the app, not just the zip.** So Stow opens even if its first launch happens offline.
 - **The repo is private.** A GitHub Release there is only visible to people with access to the repo.
+- **The notary credentials can disappear.** On 2026-10-12, the `stow-notary` profile notarized a build at 17:00. By 18:50 notarytool reported "No Keychain password item found", and the system log showed no cause. If `release.sh` reports that error, run the `store-credentials` command again.
 - **`--publish` rebuilds and re-notarizes** rather than reusing step 2's zip. That costs a few minutes, but the published file is always built from the tagged commit.

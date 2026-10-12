@@ -32,8 +32,10 @@ fi
 IDENTITY="$(security find-identity -v -p codesigning | awk -F'"' '/Developer ID Application:/ && !found { print $2; found = 1 }')"
 [[ -n "$IDENTITY" ]] \
   || fail "No 'Developer ID Application' identity in your keychain. Create one in Xcode > Settings > Accounts > Manage Certificates (docs/releasing.md)."
-xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1 \
-  || fail "No working notary credentials named '$NOTARY_PROFILE'. Store them once with xcrun notarytool store-credentials (docs/releasing.md)."
+# Show notarytool's own words: "missing credentials" and "network down" need different fixes.
+if ! NOTARY_ERROR="$(xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" 2>&1 >/dev/null)"; then
+  fail "The notary credentials '$NOTARY_PROFILE' didn't work. notarytool said:"$'\n'"$NOTARY_ERROR"$'\n'"If they're missing, store them again (docs/releasing.md)."
+fi
 
 APP="$(scripts/build-app.sh)"
 
