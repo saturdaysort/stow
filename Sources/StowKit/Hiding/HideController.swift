@@ -38,6 +38,7 @@ public final class HideController {
     private var token: (any RestrictionToken)?
     private var wantsHidden = false
     private var generation = 0
+    private var launchTask: (any ScheduledTask)?
 
     public init(restriction: any MenuBarRestriction,
                 preferences: Preferences,
@@ -89,10 +90,32 @@ public final class HideController {
 
     /// Quit (menu, Command-Q, logout, SIGTERM): release everything before the process exits.
     public func prepareForQuit() {
+        launchTask?.cancel()
+        launchTask = nil
         wantsHidden = false
         generation += 1
         token?.invalidate()
         token = nil
+    }
+
+    /// The user changed which apps to hide (spec 4.1).
+    public func hideListChanged() {
+        guard wantsHidden else { return }
+        if preferences.hiddenBundleIDs.isEmpty {
+            show(userInitiated: false)
+        } else {
+            activate()
+        }
+    }
+
+    /// An app launched. Refresh the allow-list so it stays visible. Debounced 0.5s so a
+    /// burst of launches (login) causes one refresh (spec 4.4).
+    public func appLaunched() {
+        launchTask?.cancel()
+        launchTask = scheduler.schedule(after: 0.5) { [weak self] in
+            guard let self, self.wantsHidden, self.token != nil else { return }
+            self.activate()
+        }
     }
 
     // MARK: - Activation
