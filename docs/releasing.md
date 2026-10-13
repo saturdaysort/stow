@@ -28,5 +28,20 @@ A release is a zip of `Stow.app` that anyone on macOS 27 can download, unzip, dr
 - **Accessibility is granted per signature.** To macOS, a release build (Developer ID) and a dev build (Apple Development) are different apps. Switching between them means granting Accessibility again.
 - **The ticket is stapled to the app, not just the zip.** So Stow opens even if its first launch happens offline.
 - **The repo is private.** A GitHub Release there is only visible to people with access to the repo.
-- **The notary credentials can disappear.** On 2026-10-12, the `stow-notary` profile notarized a build at 17:00. By 18:50 notarytool reported "No Keychain password item found", and the system log showed no cause. If `release.sh` reports that error, run the `store-credentials` command again.
+- **Store the notary credentials from the Terminal app.**
+  - On 2026-10-12, credentials stored from the terminal tab inside the Claude desktop app notarized a build at 17:00. By 18:50 notarytool reported "No Keychain password item found", and the system log showed no cause.
+  - Storing them again from the Terminal app worked for the next release.
+  - If `release.sh` reports that error, run `store-credentials` again from the Terminal app.
+- **If `--publish` fails after pushing the tag, don't rerun it.** It will stop, because the tag already exists.
+  - On 2026-10-12, GitHub's upload server timed out. That left a draft release with no file attached.
+  - To finish by hand, attach the zip that `release.sh` built to the draft, then publish the draft:
+
+  ```bash
+  VERSION=0.1.0
+  RELEASE_ID="$(gh api repos/saturdaysort/stow/releases --jq '.[] | select(.draft) | .id')"
+  gh api --method POST -H "Content-Type: application/zip" "https://uploads.github.com/repos/saturdaysort/stow/releases/$RELEASE_ID/assets?name=Stow-$VERSION.zip" --input "build/release/Stow-$VERSION.zip"
+  gh api --method PATCH "repos/saturdaysort/stow/releases/$RELEASE_ID" -F draft=false
+  ```
+
+  - Then download the zip with `gh release download` and check that its `shasum -a 256` matches the build.
 - **`--publish` rebuilds and re-notarizes** rather than reusing step 2's zip. That costs a few minutes, but the published file is always built from the tagged commit.
