@@ -48,7 +48,7 @@ Evidence is the `screencapture -R` menu bar images in `build/verification/`. Tha
 
 1. Nate ran `tccutil reset All studio.longbrook.stow` themselves. Stow then **hid icons with no permissions at all**, because hiding never needs Accessibility.
 2. Settings showed the Accessibility banner. After the grant, the list filled in without a relaunch.
-3. A newly recorded ⌃⌥J shortcut worked system-wide. The shortcut is back to ⌃⌥H.
+3. A newly recorded ⌃⌥J shortcut worked system-wide.
 4. Stow is **not** listed under Screen & System Audio Recording or Input Monitoring.
 5. **TCC log** (`/usr/bin/log show --info --debug`, filtered by Stow's PID):
    - Stow's own requests were all `kTCCServiceAccessibility`: 64, from Settings polling while the banner showed.

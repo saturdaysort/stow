@@ -21,7 +21,7 @@ A release is a zip of `Stow.app` that anyone on macOS 27 can download, unzip, dr
 1. **Set the version** in `Resources/Info.plist` (`CFBundleShortVersionString`) and commit. `scripts/build-app.sh` sets the build number to the commit count.
 2. **Build it:** `scripts/release.sh`. It builds Stow, signs it, notarizes it and staples the ticket. Then it writes `build/release/Stow-<version>.zip` and confirms Gatekeeper accepts the unzipped app as "Notarized Developer ID".
 3. **Try it on your own Mac.** Quit Stow, copy `build/Stow.app` to `/Applications`, open it, and check that hiding works on every display.
-4. **Publish:** push `main`, then run `scripts/release.sh --publish`. It rebuilds from the same commit and tags it `v<version>`. Then it attaches the zip to a GitHub Release, downloads it back, and compares checksums.
+4. **Publish:** push `main`, then run `scripts/release.sh --publish`. The release page's text and screenshots come from `docs/release-notes.md`, with `__VERSION__` filled in. It rebuilds from the same commit and tags it `v<version>`. Then it attaches the zip to a GitHub Release, downloads it back, and compares checksums.
 
 ## Traps
 

@@ -2,6 +2,9 @@
 
 A personal macOS 27 menu bar utility that hides the menu bar icons of apps you choose behind one drawer icon. It replaces Hidden Bar, whose App Store build stopped hiding anything on macOS 27.
 
+<img src="docs/images/menu-bar-showing.png" width="333" alt="The right side of the menu bar with every icon showing and Stow's drawer open in amber"><br>
+<img src="docs/images/menu-bar-hidden.png" width="333" alt="The same menu bar with the chosen apps hidden and Stow's drawer closed">
+
 - Design: `docs/superpowers/specs/2026-10-12-stow-design.md`
 - Why it works this way: `docs/macos-27-menu-bar-findings.md`
 - On-device results: `docs/verification.md`
@@ -32,6 +35,8 @@ swift test
 
 - Click the drawer to hide or show the apps you chose. Right-click or Control-click it for the menu.
 - In Settings you can pick the apps to hide, the re-hide delay, the keyboard shortcut (Control-Option-H by default) and open at login.
+
+  <img src="docs/images/settings.png" width="552" alt="Stow's Settings window: a switch for each app with a menu bar icon, the hide-again delay and the keyboard shortcut">
 - Grant Accessibility when asked. Stow only uses it to list which apps have menu bar icons, and never needs Screen Recording.
 
 ## Known limits

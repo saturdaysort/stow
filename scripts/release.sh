@@ -90,10 +90,12 @@ fi
 git fetch -q origin
 git merge-base --is-ancestor HEAD origin/main || fail "Push main first; $TAG has to point at a commit GitHub already has."
 [[ -z "$(git ls-remote --tags origin "refs/tags/$TAG")" ]] || fail "Tag $TAG already exists on GitHub."
+# The release page's text and screenshots live in docs/release-notes.md.
+NOTES="$OUT/release-notes.md"
+sed "s/__VERSION__/$VERSION/g" docs/release-notes.md > "$NOTES"
 git tag -a "$TAG" -m "Stow $VERSION"
 git push -q origin "$TAG"
-gh release create "$TAG" "$ZIP" --verify-tag --title "Stow $VERSION" \
-  --notes "Download Stow-$VERSION.zip, unzip it, drag Stow to your Applications folder and open it. Needs macOS 27. Stow relies on a private macOS framework; if an update breaks it, Stow leaves every icon visible."
+gh release create "$TAG" "$ZIP" --verify-tag --title "Stow $VERSION" --notes-file "$NOTES"
 
 # A push isn't a release: download what GitHub serves and compare it with what was built.
 DOWNLOAD="$(mktemp -d)"
