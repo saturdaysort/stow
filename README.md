@@ -43,7 +43,7 @@ swift test
 
 - Hiding is per app, so all of an app's icons hide together.
 - While icons are hidden, macOS's exam mode is on. Clicking the clock won't open Notification Center, and Focus, Now Playing and the microphone and camera indicators may be hidden too (the small orange privacy dot stays).
-- Icons from tools without a bundle ID hide whenever Stow hides.
+- Apps macOS can't match by bundle ID hide whenever Stow hides, even when they aren't on your list. That includes tools without a bundle ID and debug builds running from Xcode.
 - Stow relies on a private macOS framework (MenuBarClientCore). If a macOS update breaks it, Stow shows "unavailable" and leaves every icon visible.
 
 ## Regenerate the placeholder app icon

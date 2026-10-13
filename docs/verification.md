@@ -109,7 +109,10 @@ Evidence: `rel-hidden/`, `rel-quit/` and `rel-hidden2/`.
 ## Known limits recorded here
 
 - **Hiding is per app,** so all of an app's icons hide together.
-- **Apps macOS can't match by bundle ID always hide** while Stow hides. That includes ad-hoc-signed apps run from outside the usual locations (the throwaway probe app stayed hidden even when allowed) and tools without a bundle ID.
+- **Apps macOS can't match by bundle ID always hide** while Stow hides. That includes:
+  - ad-hoc-signed apps run from outside the usual locations (the throwaway probe app stayed hidden even when allowed);
+  - Xcode debug builds running from DerivedData (TimeTracker, 2026-10-13);
+  - tools without a bundle ID.
 - **Shortcut conflicts can't be detected.** Carbon only reports duplicates within Stow itself, and combinations like ⌘Q can be recorded. (Review finding 8, kept for v1.)
 
 ## Minor issues deferred from the code review
